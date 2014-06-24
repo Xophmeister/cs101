@@ -3,7 +3,7 @@ CFLAGS=-c -Wall -O3
 
 all: lib doc
 
-doc: Doxyfile $(wildcard *.dox) $(wildcard *.h)
+doc: Doxyfile LICENSE.md $(wildcard *.dox) $(wildcard *.h)
 	doxygen
 
 # Static library
