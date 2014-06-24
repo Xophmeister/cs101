@@ -16,8 +16,6 @@ void llLink(llNode* alpha, llNode* beta) {
   alpha->next = beta;
 }
 
-/* WARNING!
-   Running this against a cyclic list will be non-halting. */
 size_t llLength(llNode* root) {
   if (root->next) {
     return 1 + llLength(root->next);
@@ -30,7 +28,7 @@ llNode* llTraverse(llNode* root, size_t index) {
   if (index == 0) {
     return root;
   } else {
-    if (index > 0 && root->next) {
+    if (root->next) {
       return llTraverse(root->next, index - 1);
     } else {
       return NULL;
@@ -38,8 +36,6 @@ llNode* llTraverse(llNode* root, size_t index) {
   }
 }
 
-/* WARNING!
-   Running this against a cyclic list will be non-halting. */
 llNode* llCopy(llNode* root) {
   size_t n = llLength(root);
 
@@ -57,11 +53,7 @@ llNode* llCopy(llNode* root) {
   return *copy;
 }
 
-/* WARNING!
-   Running this against a cyclic list will cause a double free memory
-   corruption error. Cyclic lists need to be freed manually. */
 void llNuke(llNode* root) {
-  /* Traverse list */
   if (root->next) {
     llNuke(root->next);
   }
@@ -69,8 +61,6 @@ void llNuke(llNode* root) {
   free(root);
 }
 
-/* WARNING!
-   Running this against a cyclic list will be non-halting. */
 void llAppend(llNode* root, void* payload) {
   if (root->next) {
     llAppend(root->next, payload);
