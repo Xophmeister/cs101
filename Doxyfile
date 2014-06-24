@@ -1,5 +1,6 @@
 PROJECT_NAME           = "CS 101"
-EXCLUDE                = README.md
+RECURSIVE              = YES
+EXCLUDE                = README.md test
 OUTPUT_DIRECTORY       = doc
 HTML_OUTPUT            = .
 OPTIMIZE_OUTPUT_FOR_C  = YES
