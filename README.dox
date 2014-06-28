@@ -1,7 +1,7 @@
 /**
 @mainpage   CS 101
 @author     Christopher Harrison (Xophmeister)
-@copyright  MIT License
+@copyright  @ref license
 
 Foundational computer science concepts, data structures and algorithms
 implemented in C. This is largely to allow me to practice my C

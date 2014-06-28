@@ -1,6 +1,7 @@
 PROJECT_NAME           = "CS 101"
+FILE_PATTERNS          = *.h *.dox
 RECURSIVE              = YES
-EXCLUDE                = README.md test
+EXCLUDE                = test
 OUTPUT_DIRECTORY       = doc
 HTML_OUTPUT            = .
 OPTIMIZE_OUTPUT_FOR_C  = YES
