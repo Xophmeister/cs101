@@ -1,0 +1,11 @@
+/**
+@page style Style Guide
+
+I note that C programmers idiomatically use `snake_case` for their
+symbols and `BLOCK_CAPS` for macros and constants. I prefer `camelCase`
+for everything and tend to shy away from capitals, unless it aids
+readability. Perhaps I'm allergic to underscores!? Tabbing and bracing
+style are holy wars, so let's not get into that. I don't care for
+Hungarian notation, but use something similar to pseudo-namespace my
+functions.
+*/

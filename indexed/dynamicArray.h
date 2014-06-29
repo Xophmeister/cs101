@@ -155,6 +155,48 @@ typedef int(*dynFilterCallback)(void*, size_t, dynArray*);
 typedef void(*dynFoldCallback)(void*, void*, size_t, dynArray*);
 
 /**
+  @typedef    dynZipWithCallback
+  @brief      Function signature for dynZipWith() callbacks
+  
+  The callback function for dynZipWith() must have the following
+  signature:
+
+ *@code{.c}
+ *void* callback(void* elementAlpha, void* elementBeta, size_t index, dynArray* arrayAlpha, dynArray* arrayBeta)
+ *@endcode
+
+  That is, on each element, the callback is called with the following:
+
+  @param      elementAlpha  The pointer to the current element from the
+                            first dynamic array
+  @param      elementBeta   The pointer to the current element from the
+                            second dynamic array
+  @param      index         The current index
+  @param      arrayAlpha    The first dynamic array
+  @param      arrayBeta     The second dynamic array
+
+  The callback function must return the pointer to the zipped result.
+  For example, if the two dynamic arrays contained only integers, the
+  following callback would have the effect of adding them together:
+
+ *@code{.c}
+ *void* sumPair(void* e1, void* e2, size_t i, dynArray* a1, dynArray* a2) {
+ *  int* newValue = malloc(sizeof(int));
+ *  *newValue = *(int*)e1 + *(int*)e2;
+ *  return (void*)newValue;
+ *}
+ *@endcode
+
+  @note       The callback's element arguments are, contrary to that for
+              dynForEach(), singly indirected to encourage immutability
+              on the original arrays
+  @note       The callback function must handle the memory allocation of
+              the transformed element; likewise, final freeing must be
+              done manually
+*/
+typedef void*(*dynZipWithCallback)(void*, void*, size_t, dynArray*, dynArray*);
+
+/**
   @fn         dynArray* dynCreate(size_t length)
   @brief      Create a dynamic array of a given size
   @param      length  Number of elements to initially allocate
@@ -245,6 +287,18 @@ extern dynArray* dynSlice(dynArray*, size_t, size_t);
 extern dynArray* dynCopy(dynArray*);
 
 /**
+  @fn         dynArray* dynJoin(dynArray* arrayAlpha, dynArray* arrayBeta)
+  @brief      Concatenate two dynamic arrays together
+  @param      arrayAlpha  The first dynamic array
+  @param      arrayBeta   The second dynamic array
+  @return     Pointer to the joined dynamic array; or `NULL` in the
+              event of an allocation failure
+
+  Concatenate two dynamic arrays together.
+*/
+extern dynArray* dynJoin(dynArray*, dynArray*);
+
+/**
   @fn         void dynForEach(dynArray* array, dynForEachCallback callback)
   @brief      Iterate over the array and apply a function to each element
   @param      array     The dynamic array to iterate over
@@ -299,6 +353,24 @@ extern dynArray* dynFilter(dynArray*, dynFilterCallback);
               performing the fold
 */
 extern void dynFold(dynArray*, void*, dynFoldCallback);
+
+/**
+  @fn         dynArray* dynZipWith(dynArray* arrayAlpha, dynArray* arrayBeta, dynZipWithCallback callback)
+  @brief      Apply the given callback function pairwise to the given arrays elements
+  @param      arrayAlpha  The first dynamic array
+  @param      arrayBeta   The second dynamic array
+  @param      callback    Pointer to callback function
+  @return     Pointer to the zipped dynamic array; or `NULL` in the
+              event of an allocation failure
+
+  Zips the two given arrays together, through the specified callback
+  function applied to successive element pairs.
+
+  @note       The length of the returned dynamic array will match that
+              of the shorter input array; tail elements from the longer
+              array will not be processed
+*/
+extern dynArray* dynZipWith(dynArray*, dynArray*, dynZipWithCallback);
 
 /**
   @fn         void dynNuke(dynArray* array)

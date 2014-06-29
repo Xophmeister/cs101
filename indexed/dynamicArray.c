@@ -41,23 +41,6 @@ dynArray* dynCreate(size_t length) {
   return newArray;
 }
 
-/*
-  Array good?
-    New length > 0?
-      Length = new length
-      New length > allocated?
-        Old length > 0?
-          Reallocate
-        Old length = 0?
-          Allocate
-        Allocated = new length
-      Buffer good?
-        NULLify any newly created space
-      Buffer bad?
-        Set length and allocated to 0
-    New length = 0?
-      Free buffer (if needed) and set length and allocated to 0
-*/
 void dynResize(dynArray* array, size_t length) {
   if (array) {
     if (length) {
@@ -151,6 +134,22 @@ dynArray* dynCopy(dynArray* array) {
   return dynSlice(array, 0, array->length - 1);
 }
 
+dynArray* dynJoin(dynArray* arrayAlpha, dynArray* arrayBeta) {
+  if (arrayAlpha && arrayBeta) {
+    dynArray* joined = dynCreate(arrayAlpha->length + arrayBeta->length);
+
+    /* Copy data buffers */
+    if (joined) {
+      memcpy(joined->buffer, arrayAlpha->buffer, sizeof(void*) * arrayAlpha->length);
+      memcpy(joined->buffer + arrayAlpha->length, arrayBeta->buffer, sizeof(void*) * arrayBeta->length);
+    }
+
+    return joined;
+  } else {
+    return NULL;
+  }
+}
+
 void dynForEach(dynArray* array, dynForEachCallback callback) {
   if (array && array->length) {
     int interrupt;
@@ -208,6 +207,23 @@ void dynFold(dynArray* array, void* accumulator, dynFoldCallback callback) {
       callback(accumulator, *dynElement(array, n), n, array);
     }
   }
+}
+
+dynArray* dynZipWith(dynArray* arrayAlpha, dynArray* arrayBeta, dynZipWithCallback callback) {
+  dynArray* zipped = dynCreate(0);
+
+  if (arrayAlpha && arrayBeta) {
+    size_t n = arrayAlpha->length > arrayBeta->length ? arrayBeta->length : arrayAlpha->length;
+    dynResize(zipped, n);
+
+    if (zipped->length) {
+      while (n--) {
+        *dynElement(zipped, n) = callback(*dynElement(arrayAlpha, n), *dynElement(arrayBeta, n), n, arrayAlpha, arrayBeta);
+      }
+    }
+  }
+
+  return zipped;
 }
 
 void dynNuke(dynArray* array) {
