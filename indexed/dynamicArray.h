@@ -4,14 +4,12 @@
   @author     Christopher Harrison (Xophmeister)
   @copyright  @ref license
 
-  Implements a dynamic array, where each element can point to arbitrary
-  data in memory.
+  Implements a heterogeneous, dynamically allocated sparse array, where
+  each element can point to arbitrary data in memory.
 */
 
 #ifndef DYNAMICARRAY_H
 #define DYNAMICARRAY_H
-
-#include <stdlib.h>
 
 /**
   @struct     dynArray
@@ -39,15 +37,25 @@ typedef struct {
   The callback function for dynForEach() must have the following
   signature:
 
- *@code{.c}
- *int callback(void** element, size_t index, dynArray* array)
- *@endcode
+  @code{.c}
+  int callback(void** element, size_t index, dynArray* array)
+  @endcode
 
   That is, on each element, the callback is called with the following:
 
   @param      element  The pointer to the pointer to the current element
   @param      index    The current index
   @param      array    The dynamic array
+
+  For example, the following callback function could be used to free
+  `malloc`'d elements in a dynForEach() call:
+
+  @code{.c}
+  int freeElements(void** e, size_t, i, dynArray* array) {
+    if (*e) { free(*e); }
+    return 0;
+  }
+  @endcode
 
   @note       The element argument is doubly indirected so that it can
               be reassigned, if required
@@ -62,9 +70,9 @@ typedef int(*dynForEachCallback)(void**, size_t, dynArray*);
 
   The callback function for dynMap() must have the following signature:
 
- *@code{.c}
- *void* callback(void* element, size_t index, dynArray* array)
- *@endcode
+  @code{.c}
+  void* callback(void* const element, size_t index, dynArray* array)
+  @endcode
 
   That is, on each element, the callback is called with the following:
 
@@ -76,13 +84,13 @@ typedef int(*dynForEachCallback)(void**, size_t, dynArray*);
   result. For example, if the dynamic array contained only integers, the
   following callback would have the effect of doubling each element:
 
- *@code{.c}
- *void* doubleInt(void* e, size_t i, dynArray* array) {
- *  int* newValue = malloc(sizeof(int));
+  @code{.c}
+  void* doubleInt(void* const e, size_t i, dynArray* array) {
+    int* newValue = malloc(sizeof(int));
  *  *newValue = *(int*)e * 2;
- *  return (void*)newValue;
- *}
- *@endcode
+    return (void*)newValue;
+  }
+  @endcode
 
   @note       The callback's element argument is, contrary to that for
               dynForEach(), singly indirected to encourage immutability
@@ -91,7 +99,7 @@ typedef int(*dynForEachCallback)(void**, size_t, dynArray*);
               the transformed element; likewise, final freeing must be
               done manually
 */
-typedef void*(*dynMapCallback)(void*, size_t, dynArray*);
+typedef void*(*dynMapCallback)(void* const, size_t, dynArray*);
 
 /**
   @typedef    dynFilterCallback
@@ -100,9 +108,9 @@ typedef void*(*dynMapCallback)(void*, size_t, dynArray*);
   The callback function for dynFilter() must have the following
   signature:
 
- *@code{.c}
- *int callback(void* element, size_t index, dynArray* array)
- *@endcode
+  @code{.c}
+  int callback(void* const element, size_t index, dynArray* array)
+  @endcode
 
   That is, on each element, the callback is called with the following:
 
@@ -111,13 +119,21 @@ typedef void*(*dynMapCallback)(void*, size_t, dynArray*);
   @param      array    The dynamic array
 
   The element is included in the filter if the callback function returns
-  a non-zero value.
+  a non-zero value. For example, the following callback function would
+  filter out the `NULL` elements, effectively converting a sparse array
+  to a dense one:
+
+  @code{.c}
+  int compress(void* const e, size_t i, dynArray* array) {
+    return e;
+  }
+  @endcode
 
   @note       The callback's element argument is, contrary to that for
               dynForEach(), singly indirected to encourage immutability
               on the original array
 */
-typedef int(*dynFilterCallback)(void*, size_t, dynArray*);
+typedef int(*dynFilterCallback)(void* const, size_t, dynArray*);
 
 /**
   @typedef    dynFoldCallback
@@ -125,9 +141,9 @@ typedef int(*dynFilterCallback)(void*, size_t, dynArray*);
   
   The callback function for dynFold() must have the following signature:
 
- *@code{.c}
- *void callback(void* accumulator, void* element, size_t index, dynArray* array)
- *@endcode
+  @code{.c}
+  void callback(void* const accumulator, void* const element, size_t index, dynArray* array)
+  @endcode
 
   That is, on each element, the callback is called with the following:
 
@@ -140,19 +156,19 @@ typedef int(*dynFilterCallback)(void*, size_t, dynArray*);
   example, if the dynamic array contained only integers, the following
   callback would have the effect of summing the array:
 
- *@code{.c}
- *void sum(void* acc, void* e, size_t i, dynArray* array) {
- *  if (e) {
+  @code{.c}
+  void sum(void* const acc, void* const e, size_t i, dynArray* array) {
+    if (e) {
  *    *(int*)acc += *(int*)e;
- *  }
- *}
- *@endcode
+    }
+  }
+  @endcode
 
   @note       The callback's element argument is, contrary to that for
               dynForEach(), singly indirected to encourage immutability
               on the original array
 */
-typedef void(*dynFoldCallback)(void*, void*, size_t, dynArray*);
+typedef void(*dynFoldCallback)(void* const, void* const, size_t, dynArray*);
 
 /**
   @typedef    dynZipWithCallback
@@ -161,9 +177,9 @@ typedef void(*dynFoldCallback)(void*, void*, size_t, dynArray*);
   The callback function for dynZipWith() must have the following
   signature:
 
- *@code{.c}
- *void* callback(void* elementAlpha, void* elementBeta, size_t index, dynArray* arrayAlpha, dynArray* arrayBeta)
- *@endcode
+  @code{.c}
+  void* callback(void* const elementAlpha, void* const elementBeta, size_t index, dynArray* arrayAlpha, dynArray* arrayBeta)
+  @endcode
 
   That is, on each element, the callback is called with the following:
 
@@ -179,13 +195,13 @@ typedef void(*dynFoldCallback)(void*, void*, size_t, dynArray*);
   For example, if the two dynamic arrays contained only integers, the
   following callback would have the effect of adding them together:
 
- *@code{.c}
- *void* sumPair(void* e1, void* e2, size_t i, dynArray* a1, dynArray* a2) {
- *  int* newValue = malloc(sizeof(int));
+  @code{.c}
+  void* sumPair(void* const e1, void* const e2, size_t i, dynArray* a1, dynArray* a2) {
+    int* newValue = malloc(sizeof(int));
  *  *newValue = *(int*)e1 + *(int*)e2;
- *  return (void*)newValue;
- *}
- *@endcode
+    return (void*)newValue;
+  }
+  @endcode
 
   @note       The callback's element arguments are, contrary to that for
               dynForEach(), singly indirected to encourage immutability
@@ -194,7 +210,7 @@ typedef void(*dynFoldCallback)(void*, void*, size_t, dynArray*);
               the transformed element; likewise, final freeing must be
               done manually
 */
-typedef void*(*dynZipWithCallback)(void*, void*, size_t, dynArray*, dynArray*);
+typedef void*(*dynZipWithCallback)(void* const, void* const, size_t, dynArray*, dynArray*);
 
 /**
   @fn         dynArray* dynCreate(size_t length)
@@ -250,9 +266,29 @@ extern void dynAppend(dynArray*, void*);
               in the event of a bounds error
 
   Return the pointer which points to the specified array's element at
-  the given index. This can then be dereferenced to get/set the element.
+  the given index, this can then be dereferenced to get and set the
+  element's value.
 */
 extern void** dynElement(dynArray*, size_t);
+
+/**
+  @fn         dynArray* dynProject(void* array, size_t length, size_t width)
+  @brief      Project a regular array into a dynamic one
+  @param      array  The array
+  @param      length The array's length
+  @param      width  Each element's width
+  @return     Pointer to the projected dynamic array; or `NULL` in the
+              event of an allocation failure
+
+  Project a specific contiguous chunk of memory, of a given number of
+  specified bytes, into a respectively sized dynamic array. For example:
+
+  @code{.c}
+  double    myData[4] = {0.1, 0.2, 0.3, 0.4};
+  dynArray* projected = dynProject(myData, 4, sizeof(double));
+  @endcode
+*/
+extern dynArray* dynProject(void*, size_t, size_t);
 
 /**
   @fn         dynArray* dynSlice(dynArray* array, size_t from, size_t to)

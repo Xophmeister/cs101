@@ -114,6 +114,20 @@ void** dynElement(dynArray* array, size_t index) {
   }
 }
 
+dynArray* dynProject(void* array, size_t length, size_t width) {
+  dynArray* projected = dynCreate(length);
+  
+  /* Project array on to data buffer */
+  if (length && projected) {
+    size_t n = length;
+    while (n--) {
+      *dynElement(projected, n) = array + (n * width);
+    }
+  }
+
+  return projected;
+}
+
 dynArray* dynSlice(dynArray* array, size_t from, size_t to) {
   if (to >= from && to < array->length) {
     size_t    newLength = (to + 1) - from;
