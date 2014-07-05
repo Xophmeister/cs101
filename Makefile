@@ -1,20 +1,34 @@
 CC=gcc
-CFLAGS=-c -Wall -O3
+CFLAGS=-fpic -O3
+VPATH=indexed:graph
 
-all: lib doc
-
-doc: Doxyfile LICENSE.md $(wildcard *.dox) $(wildcard *.h)
-	doxygen
-
-# Static library
-lib: linkedList.o stack.o
-	ar rcs libCS101.a linkedList.o stack.o
-
-linkedList.o: linkedList.c
-	$(CC) $(CFLAGS) linkedList.c
-
-stack.o: stack.c linkedList.o
-	$(CC) $(CFLAGS) stack.c
+all: static shared doc
 
 clean:
-	rm -rf *o
+	rm -rf *.o
+
+.PHONY: all clean static shared
+
+# Source
+objects=dynamicArray.o directedGraph.o linkedList.o stack.o
+
+dynamicArray.o: dynamicArray.c dynamicArray.h
+directedGraph.o: directedGraph.c directedGraph.h dynamicArray.h
+linkedList.o: linkedList.c directedGraph.h linkedList.h 
+stack.o: stack.c linkedList.h stack.h 
+
+# Static library
+static: libCS101.a
+
+libCS101.a: $(objects)
+	$(AR) rcs $@ $^
+
+# Shared library
+shared: libCS101.so
+
+libCS101.so: $(objects)
+	$(CC) -shared -o $@ $^
+
+# Documentation
+doc: Doxyfile $(shell find . -name "*.dox" -or -name "*.h")
+	doxygen
