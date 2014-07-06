@@ -124,7 +124,6 @@ extern dgNode* dgTraverse(dgNode*, size_t, size_t);
   @param      route  A dynamic array of link indices that describe the route
   @return     Pointer to the resolved node; or `NULL` in the event of a
               routing failure
-  @todo       Not yet implemented
 
   Return the pointer to the node resolved by following the specified
   route from the given starting node. The routing array ought to contain

@@ -41,16 +41,36 @@ dgNode** dgLink(dgNode* node, size_t index, size_t depth) {
 
 dgNode* dgTraverse(dgNode* node, size_t index, size_t depth) {
   if (depth) {
-    dgNode** end = dgLink(node, index, depth);
-    return *end;
+    return *dgLink(node, index, depth);
   } else {
     return node;
   }
 }
 
-/* TODO */
-dgNode* dgRoute(dgNode* node, dynArray* route) {
+static dgNode* dgStep(dgNode* node, dynArray* route, size_t cursor) {
+  if (node) {
+    if (cursor == route->length) {
+      return node;
+    } else {
+      size_t* nextTurn = *dynElement(route, cursor);
 
+      if (nextTurn) {
+        return dgStep(*dynElement(node->links, *nextTurn), route, cursor + 1);
+      } else {
+        return NULL;
+      }
+    }
+  } else {
+    return NULL;
+  }
+}
+
+dgNode* dgRoute(dgNode* node, dynArray* route) {
+  if (route) {
+    return dgStep(node, route, 0);
+  } else {
+    return node;
+  }
 }
 
 cyclicity dgIsCyclic(dgNode* node) {
@@ -61,7 +81,7 @@ dgNode* dgCopy(dgNode* node) {
   /* TODO */
 }
 
-static int freeNode(void** node, size_t i, dynArray* links) {
+static int chainNuke(void** node, size_t i, dynArray* links) {
   if (*node) {
     dgNuke((dgNode*)*node);
   }
@@ -71,7 +91,7 @@ static int freeNode(void** node, size_t i, dynArray* links) {
 void dgNuke(dgNode* node) {
   if (node) {
     if (node->links) {
-      dynForEach(node->links, &freeNode);
+      dynForEach(node->links, &chainNuke);
       dynNuke(node->links);
     }
     free(node);
